@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Repository
 public class PostRepository {
@@ -23,11 +24,14 @@ public class PostRepository {
     }
 
     public List<Post> all() {
-        return new ArrayList<>(repository.values());
+        return new ArrayList<>(repository.values()
+                .stream()
+                .filter(e -> !e.isRemoved())
+                .collect(Collectors.toList()));
     }
 
     public Optional<Post> getById(long id) {
-        return Optional.ofNullable(repository.get(id));
+        return Optional.ofNullable(repository.containsKey(id) && !repository.get(id).isRemoved() ? repository.get(id) : null);
     }
 
     public Optional<Post> save(Post post) {
@@ -36,7 +40,7 @@ public class PostRepository {
             post.setId(key);
             repository.put(key, post);
         } else {
-            if (repository.containsKey(post.getId())) {
+            if (repository.containsKey(post.getId()) && !repository.get(post.getId()).isRemoved()) {
                 repository.get(post.getId()).setContent(post.getContent());
             } else {
                 post = null;
@@ -46,6 +50,15 @@ public class PostRepository {
     }
 
     public Optional<Post> removeById(long id) {
-        return Optional.ofNullable(repository.remove(id));
+        Post post = null;
+        if (repository.containsKey(id)) {
+            post = repository.get(id);
+            if (!post.isRemoved()) {
+                post.setRemoved(true);
+            } else {
+                post = null;
+            }
+        }
+        return Optional.ofNullable(post);
     }
 }

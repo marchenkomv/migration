@@ -1,6 +1,5 @@
 package ru.netology.controller;
 
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.netology.model.Post;
 import ru.netology.service.PostService;
